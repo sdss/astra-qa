@@ -1,0 +1,77 @@
+---
+title: "APOGEE"
+---
+
+
+```{python}
+#| label: tbl-apogee-visits
+#| tbl-cap: APOGEE visits by data reduction pipeline version
+from IPython.display import Markdown
+from tabulate import tabulate
+
+from astra.models import ApogeeVisitSpectrum, ApogeeCoaddedSpectrumInApStar
+from peewee import fn
+
+table = (
+    ApogeeVisitSpectrum.select(
+        ApogeeVisitSpectrum.release, 
+        ApogeeVisitSpectrum.apred, 
+        ApogeeVisitSpectrum.telescope,
+        fn.COUNT(ApogeeVisitSpectrum)
+    )
+    .group_by(
+        ApogeeVisitSpectrum.release, 
+        ApogeeVisitSpectrum.apred,
+        ApogeeVisitSpectrum.telescope
+    )
+    .order_by(
+        ApogeeVisitSpectrum.release.desc()
+    )
+    .tuples()
+)
+
+Markdown(tabulate(
+    [(*_, f"{c:,}") for *_, c in table], 
+    headers=[
+        "Release", 
+        "DRP",
+        "Telescope", 
+        "Spectra"
+    ]
+))
+```
+
+
+```{python}
+#| label: tbl-apogee-coadds
+#| tbl-cap: APOGEE co-added spectra by data reduction pipeline version
+
+data = (
+    ApogeeCoaddedSpectrumInApStar
+    .select(
+        ApogeeCoaddedSpectrumInApStar.release,
+        ApogeeCoaddedSpectrumInApStar.apred,
+        ApogeeCoaddedSpectrumInApStar.telescope,
+        fn.COUNT(ApogeeCoaddedSpectrumInApStar)
+    )
+    .group_by(
+        ApogeeCoaddedSpectrumInApStar.release,
+        ApogeeCoaddedSpectrumInApStar.apred,
+        ApogeeCoaddedSpectrumInApStar.telescope
+    )
+    .order_by(
+        ApogeeCoaddedSpectrumInApStar.release.desc()    
+    )
+    .tuples()
+)
+
+Markdown(tabulate(
+    [(*_, f"{c:,}") for *_, c in data], 
+    headers=[
+        "Release", 
+        "DRP",
+        "Telescope", 
+        "Spectra"
+    ]
+))
+```
