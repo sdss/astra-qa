@@ -1,0 +1,50 @@
+project:
+  type: website
+
+execute:
+  freeze: auto
+
+
+website:
+  title: "Astra"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - about.qmd
+
+  sidebar:
+    style: "docked"
+    search: true
+    contents:
+    - section: "<b>Metadata</b>"
+      contents:
+        - metadata_reddening.qmd
+        - flags.qmd
+    - section: "<b>Data</b>"
+      contents:
+        - data_apogee.qmd
+        - data_boss.qmd
+    - section: "<b>Pipelines</b>"
+      contents:
+        - pipelines_aspcap.qmd
+        - pipelines_astronn.qmd
+        - pipelines_classifier.qmd
+        - pipelines_corv.qmd
+        - pipelines_lineforest.qmd
+        - pipelines_mdwarftype.qmd
+        - pipelines_slam.qmd 
+        - pipelines_snow_white.qmd       
+        - pipelines_thecannon.qmd
+        
+
+
+format:
+  html:
+    code-fold: true
+    theme: sandstone
+    css: styles.css
+    toc: true
+
+
+
