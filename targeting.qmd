@@ -1,0 +1,275 @@
+---
+title: "Targeting"
+bibliography: bibliography.bib
+
+execute:
+  freeze: auto
+
+---
+
+
+```{python}
+import numpy as np
+from tabulate import tabulate
+from IPython.display import Markdown
+from astropy.table import Table
+
+from astra.models import Source
+from sdss_semaphore.targeting import TargetingFlags
+
+# Query Astra for all source-level information
+sources = list(
+    Source
+    .select(
+        Source.l,
+        Source.b,
+        Source.sdss5_target_flags,
+        Source.n_boss_visits,
+        Source.n_apogee_visits,
+        Source.bp_mag,
+        Source.rp_mag,
+        Source.g_mag,
+        Source.plx
+    )
+    .dicts()
+)
+
+# Pop the targeting flags into semaphore
+flags = TargetingFlags([bytearray(s.pop("sdss5_target_flags")) for s in sources])
+
+# Now we have an astropy Table of `sources`, and a `flags` reference.
+sources = Table(rows=sources)
+
+Markdown(f"The `astra` database currently contains BOSS and/or APOGEE spectra for {len(sources):,} sources.")
+```
+
+
+# Sky coverage
+
+## Milky Way Mapper
+
+```{python}
+#| fig-cap: Logarithmic count of Milky Way Mapper sources across the sky.
+import healpy as hp
+import matplotlib.pyplot as plt
+
+def plot_mollview_density(sources, n_side=128, **kwargs):
+    finite = np.isfinite(sources["b"].astype(float) * sources["l"].astype(float))
+    theta = np.pi/2 - np.deg2rad(sources["b"].astype(float)[finite])
+    phi = np.deg2rad(sources["l"].astype(float)[finite])
+
+    indices = hp.ang2pix(n_side, theta, phi)
+    n_pix = hp.nside2npix(n_side)
+
+    hpx_map = np.ones(n_pix)
+    for index in indices:
+        hpx_map[index] += 1
+
+    fig = plt.figure(figsize=(10, 10), dpi=300)
+    kwds = dict(cbar=False, norm="log", cmap="inferno")
+    kwds.update(kwargs)
+    hp.mollview(hpx_map, fig=fig, **kwds)
+    return fig
+
+fig = plot_mollview_density(sources[flags.in_mapper("mwm")], title="Milky Way Mapper")
+```
+
+## Black Hole Mapper
+
+```{python}
+#| fig-cap: Logarithmic count of Black Hole Mapper sources across the sky.
+fig = plot_mollview_density(sources[flags.in_mapper("bhm")], title="Black Hole Mapper")
+```
+
+## Open fiber program
+
+```{python}
+#| fig-cap: Logarithmic count of open fiber program sources across the sky.
+fig = plot_mollview_density(sources[flags.in_mapper("open")], title="Open fiber program")
+```
+
+## Operations
+
+```{python}
+#| fig-cap: Logarithmic count of open fiber program sources across the sky.
+fig = plot_mollview_density(sources[flags.in_mapper("ops")], title="Operations")
+```
+
+## All
+
+```{python}
+fig = plot_mollview_density(sources, title="All")
+```
+
+
+# Summary
+
+## By mapper
+
+```{python}
+def tabulate_counts_by_attribute(attribute_name, attributes, callable):
+    headers = [attribute_name, "Sources", "BOSS visits", "APOGEE visits"]
+    rows = []
+    for item in attributes:
+        mask = callable(item)
+        rows.append(
+            (
+                f"`{item}`", 
+                f"{np.sum(mask):,}",
+                f"{np.sum(sources['n_boss_visits'][mask]):,}", 
+                f"{np.sum(sources['n_apogee_visits'][mask]):,}"
+            )
+        )
+    return Markdown(tabulate(rows, headers=headers, colalign=("left", "right", "right", "right")))
+
+tabulate_counts_by_attribute(
+    "Mapper", 
+    sorted(flags.all_mappers), 
+    lambda mapper: flags.in_mapper(mapper)
+)
+```
+
+## By program
+
+```{python}
+tabulate_counts_by_attribute(
+    "Program", 
+    sorted(flags.all_programs), 
+    lambda program: flags.in_program(program)
+)
+```
+
+## By alternate program
+```{python}
+tabulate_counts_by_attribute(
+    "Alternate Program", 
+    sorted(flags.all_alt_programs), 
+    lambda alt_program: flags.in_alt_program(alt_program)
+)
+```
+
+## By carton name
+```{python}
+tabulate_counts_by_attribute(
+    "Carton name", 
+    sorted(flags.all_names), 
+    lambda name: flags.in_carton_name(name)
+)
+```
+
+## By alternate carton name
+```{python}
+tabulate_counts_by_attribute(
+    "Alternate carton name", 
+    sorted(flags.all_alt_names), 
+    lambda alt_name: flags.in_alt_name(alt_name)
+)
+```
+
+# Hertzsprung-Russell diagrams
+
+## By program
+
+```{python}
+import numpy as np
+import astra_qa as qa
+import matplotlib.pyplot as plt
+import warnings
+from matplotlib.colors import LogNorm
+
+def plot_hertzsprung_russell_diagram_by_attribute(
+    attributes, 
+    callable, 
+    bins=(
+        np.linspace(-1, 6, 200),
+        np.linspace(-5, 25, 200)
+    )
+):
+    warnings.simplefilter("ignore")
+
+    bp_rp = sources["bp_mag"].astype(float) - sources["rp_mag"].astype(float)
+    M_G = sources["g_mag"].astype(float) - 5 + 5 * np.log10(sources["plx"].astype(float))
+    finite = np.isfinite(bp_rp * M_G)
+
+    # First let's find alt names that have sources.
+    show_attributes = []
+    for alt_name in sorted(attributes):
+        mask = callable(alt_name)
+        if np.any(mask * finite):
+            show_attributes.append(alt_name)
+
+    N, K = (len(show_attributes), 3)
+    L = int(np.ceil(N / K))
+
+    n_bins = 200
+
+    figsize = (9, 9/K * L)
+
+    fig, axes = plt.subplots(L, K, figsize=figsize)
+    fig.set_size_inches(*figsize)
+    for i, (attribute, ax) in enumerate(zip(show_attributes, axes.flat)):
+        ax.set_title(attribute, fontsize=6)     
+        mask = callable(attribute)
+        qa.plot_binned_statistic(
+            bp_rp[mask],
+            M_G[mask],
+            M_G[mask],
+            function="count",
+            bins=bins,
+            interpolation="none",
+            norm=LogNorm(),
+            min_entries_per_bin=2,
+            xlabel="BP-RP",
+            ylabel="M_G",
+            ax=ax
+        )
+
+    for ax in axes.flat[N:]:
+        if ax.get_subplotspec().is_first_col():
+            ax.set_ylabel("M_G")
+        else:
+            ax.set_yticklabels([])
+        if ax.get_subplotspec().is_last_row():
+            ax.set_xlabel("BP-RP")
+        else:
+            ax.set_xticklabels([])    
+        ax.set_visible(False)
+    fig.tight_layout()
+    return fig
+
+fig = plot_hertzsprung_russell_diagram_by_attribute(
+    sorted(flags.all_programs), 
+    lambda program: flags.in_program(program)
+)
+None
+```
+
+## By alternate program
+
+```{python}
+fig = plot_hertzsprung_russell_diagram_by_attribute(
+    sorted(flags.all_alt_programs), 
+    lambda alt_program: flags.in_alt_program(alt_program)
+)
+None
+```
+
+## By carton name
+
+```{python}
+fig = plot_hertzsprung_russell_diagram_by_attribute(
+    sorted(flags.all_names),
+    lambda name: flags.in_carton_name(name)
+)
+None
+```
+
+## By alternate carton name
+
+```{python}
+fig = plot_hertzsprung_russell_diagram_by_attribute(
+    sorted(flags.all_alt_names),
+    callable=lambda attr: flags.in_alt_name(attr),
+)
+None
+```

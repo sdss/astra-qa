@@ -1,0 +1,131 @@
+---
+title: "CORV"
+bibliography: bibliography.bib
+author:
+  - name: Vedant Chandra
+    affiliation:
+      - id: cfa
+        name: Center for Astrophysics, Harvard & Smithsonian
+  - name: Person 1
+    affiliation: 
+     - id: wwu
+       name: Place 1
+
+---
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+from astropy.table import Table
+from astra.utils import expand_path
+from astra.models import Source
+
+import astra_qa as qa
+from astra import __version__
+from astra.models import (
+    Corv as MODEL,
+    BossVisitSpectrum as VISIT_SPECTRUM_MODEL,
+    BossCombinedSpectrum as COADD_SPECTRUM_MODEL
+)
+```
+
+# Summary
+
+
+
+The pipeline summary files include;
+
+```{python}
+qa.render_links_to_summary_files(MODEL)
+```
+
+Pipelines are usually executed on coadded spectra and on visit (epoch) spectra. 
+Even if a pipeline only runs on spectra from one instrument (e.g., APOGEE), there are still many derivative products of those spectra, and different ways they can be stored.
+
+For example, a pipeline might require the input spectra to be at the rest frame and resampled onto a common wavelength grid, so it is not expected to report results from spectra that are stored in the observed frame.
+Or there might be multiple variants of rest-frame spectra of the same observation, which vary in how they were resampled or combined. 
+
+The table below lists all spectrum models in `astra`, and the number of pipeline results for that spectrum model.
+
+```{python}
+qa.render_row_counts_by_spectrum_model(MODEL)
+```
+
+The following figure shows the number of visit spectra and the number of pipeline results as a function of time, which can be useful for identifying any chronological chunks of missing or problematic data.
+Here we are showing visit spectra from the spectrum model that is most frequently analysed by this pipeline.
+
+```{python}
+#| out-width: 100%
+#| fig-format: png
+fig = qa.plot_visits_by_mjd(VISIT_SPECTRUM_MODEL, MODEL)
+```
+
+
+# Scientific verification
+
+
+## Kiel diagrams
+
+```{python}
+#| label: fig-hrd
+#| fig-cap: "Kiel diagram of all unflagged results reported by this pipeline (on coadds and visits)."
+
+data = np.atleast_2d(
+    list(
+        MODEL
+        .select(
+            MODEL.teff,
+            MODEL.logg,
+        )
+        .where(MODEL.teff.is_null(False))
+        .tuples()
+    )
+)
+
+fig = qa.plot_kiel_density(*data.T, x_lims=(3000, 20000), y_lims=(7, 10), n_bins=50, min_entries_per_bin=1)
+```
+
+
+# Calibrations
+
+## Error model
+
+### Formal (raw) error
+
+These plots show the log density of raw formal error reported by the pipeline as a function of spectrum S/N ratio.
+
+```{python}
+#fig = qa.plot_formal_error_wrt_snr(MODEL, (VISIT_SPECTRUM_MODEL, ), label_names=("teff", "logg"))
+```
+
+### Calibrated error
+
+```{python}
+#fig = qa.plot_z_scores("Corv")
+```
+
+# Reference
+
+The following papers describe the pipeline in more detail:
+
+* 
+
+## Field descriptions
+```{python}
+qa.render_data_model(MODEL)
+```
+
+## Flag definitions
+
+The table below gives the pipeline flag definitions, their descriptions, and the number of times that flag is set `True` on a result in the database.
+
+```{python}
+#qa.render_flag_definitions(MODEL)
+```
+
+
+
+```{python}
+from datetime import datetime
+qa.Markdown(f"This page was built on {datetime.now()}.")
+```

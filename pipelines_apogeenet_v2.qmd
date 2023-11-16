@@ -1,0 +1,560 @@
+---
+title: "APOGEENet (v2)"
+bibliography: bibliography.bib
+author:
+  - name: Marina Kounkel
+    email: marina.kounkel@vanderbilt.edu
+    affiliation:
+      - id: unf
+        name: University of North Florida
+      - id: vu
+        name: Vanderbilt University
+    roles: Principal investigator of APOGEENet.    
+    corresponding: true
+---
+
+::: {.callout-caution collapse="false"}
+## There are multiple versions of APOGEENet
+
+This page is showing results from APOGEENet II. [See here for APOGEENet III results.](pipelines_apogeenet_v3.html)
+:::
+
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+from astropy.table import Table
+from astra.utils import expand_path
+from astra.models import Source
+
+import astra_qa as qa
+from astra import __version__
+from astra.models import (
+    ApogeeNetV2 as MODEL,
+    ApogeeVisitSpectrumInApStar as VISIT_SPECTRUM_MODEL,
+    ApogeeCoaddedSpectrumInApStar as COADD_SPECTRUM_MODEL
+)
+```
+
+# Summary
+
+APOGEENet [@apogeenet_1; @apogeenet_2] uses a convolutional neural network to estimate stellar labels ($T_\mathrm{eff}$, $\log{g}$, and metallicity [Fe/H]) given a rest-frame resampled APOGEE spectrum.
+
+The pipeline summary files include;
+
+```{python}
+qa.render_links_to_summary_files(MODEL)
+```
+
+Pipelines are usually executed on coadded spectra and on visit (epoch) spectra. 
+Even if a pipeline only runs on spectra from one instrument (e.g., APOGEE), there are still many derivative products of those spectra, and different ways they can be stored.
+
+For example, a pipeline might require the input spectra to be at the rest frame and resampled onto a common wavelength grid, so it is not expected to report results from spectra that are stored in the observed frame.
+Or there might be multiple variants of rest-frame spectra of the same observation, which vary in how they were resampled or combined. 
+
+The table below lists all spectrum models in `astra`, and the number of pipeline results for that spectrum model.
+
+```{python}
+qa.render_row_counts_by_spectrum_model(MODEL)
+```
+
+The following figure shows the number of visit spectra and the number of pipeline results as a function of time, which can be useful for identifying any chronological chunks of missing or problematic data.
+Here we are showing visit spectra from the spectrum model that is most frequently analysed by this pipeline.
+
+```{python}
+#| out-width: 100%
+#| fig-format: png
+fig = qa.plot_visits_by_mjd(VISIT_SPECTRUM_MODEL, MODEL)
+```
+
+
+# Scientific verification
+
+## The Sun
+
+::: {.callout-note}
+The Sun is knowingly incorrect in APOGEENet II because no photometry or astrometry was given with the spectrum. It is flagged appropriately.
+:::
+
+```{python}
+#| label: tbl-solar-parameters
+#| tbl-cap: Stellar parameters inferred given a Solar spectrum
+
+qa.render_all_solar_results_pivot(MODEL)
+```
+
+## Kiel diagrams
+
+```{python}
+#| label: fig-hrd
+#| fig-cap: "Kiel diagram of all unflagged results reported by this pipeline (on coadds and visits)."
+
+data = np.atleast_2d(
+    list(
+        MODEL
+        .select(
+            MODEL.teff,
+            MODEL.logg,
+            MODEL.fe_h,
+        )
+        .where(MODEL.teff.is_null(False) & (MODEL.result_flags == 0))
+        .tuples()
+    )
+)
+
+fig = qa.plot_kiel_two_panel(*data.T)
+```
+
+## Seismology
+
+Here we cross-match the pipeline results to asteroseismic catalogs. The APOKASC catalog version 3 (7.0.5) was used for these comparisons. 
+```{python}
+apokasc, results, apokasc_indices, pipeline_indices = qa.prepare_apokasc_comparison(MODEL, COADD_SPECTRUM_MODEL)
+```
+
+Throughout this section we are only considering the results from the co-added spectra. @fig-apokasc-rgb-rc shows the difference in surface gravity for RGB/RC stars, where the classification of RGB vs RC comes from asteroseismology. 
+
+```{python}
+#| label: fig-apokasc-rgb-rc
+#| fig-cap: "Difference in log(g) between this pipeline and APOKASC for red giant branch stars and red clump stars, where evolutionary states are determined from APOKASC."
+
+fig = qa.plot_apokasc_rgb_rc_logg_comparison(apokasc[apokasc_indices], results[pipeline_indices])
+```
+
+In @fig-apokasc-logg-distributions we show the distribution of log(g) for the entire APOKASC sample, and those from this pipeline. Results are only shown for stars that are matched to the APOKASC sample (i.e., so the distributions should have the same number of stars in them), but the bin limits are restricted to between 0.5 and 4.0, so any logg values outside of this will not be shown.
+
+```{python}
+#| label: fig-apokasc-logg-distributions
+#| fig-cap: "Distributions of log(g) for this pipeline and those in APOKASC, separated by evolutionary state (as determined by APOKASC)."
+fig = qa.plot_apokasc_logg_distributions(apokasc[apokasc_indices], results[pipeline_indices], MODEL)
+```
+
+Finally, @fig-apokasc-kiel shows Kiel diagrams using results from this pipeline. Three views are shown: a histogram; a histogram coloured by the log counts; and a scatter plot coloured by the pipelinre-reported metallicity.
+```{python}
+#| label: fig-apokasc-kiel
+#| fig-cap: "Kiel diagrams showing results from this pipeline for all stars in the APOKASC sample. The different panels show density, log density, and coloured by metallicity."
+fig = qa.plot_hrd_of_apokasc_sample(results[pipeline_indices])
+```
+
+## Star clusters (OCCAM)
+
+The Open Cluster Chemical Abundances and Mapping (OCCAM) Survey [@occam] produced a comprehensive APOGEE spectroscopic data set for hundreds of open clusters. 
+
+Here we are using the OCCAM value added catalog associated with @myers:2022, with some additional restrictions: we require bonafide cluster members to be within 3 sigma of the cluster mean in proper motion, radial velocity, and metallicity. This restricted sample includes 95 high quality OCCAM clusters, but for these pages we have restricted it to clusters with 10 or more bonafide members. 
+
+This restricted catalog was kindly prepared by Jonah Otto (TCU) and can be [accessed here](https://data.sdss5.org/sas/sdsswork/mwm/spectro/astra/aux/external-catalogs/high_quality_occam_cluster_stars_all.fits).
+
+
+```{python}
+from astra.models import Source
+from astropy.table import Table
+from astra.utils import expand_path
+
+cluster_args = (MODEL, COADD_SPECTRUM_MODEL)
+
+occam = Table.read(expand_path(f"$MWM_ASTRA/aux/external-catalogs/high_quality_occam_cluster_stars_all.fits"))
+get_cluster_members = lambda name: tuple(occam["APOGEE_ID"][occam["CLUSTER"] == name])
+```
+
+
+### Berkeley 18
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('Berkeley 18')), *cluster_args)
+```
+
+
+### Berkeley 85
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('Berkeley 85')), *cluster_args)
+```
+
+
+### Briceno 1
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('Briceno 1')), *cluster_args)
+```
+
+
+### Dolidze 41
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('Dolidze 41')), *cluster_args)
+```
+
+
+### ESO 211 03
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('ESO 211 03')), *cluster_args)
+```
+
+
+### ESO 518 03
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('ESO 518 03')), *cluster_args)
+```
+
+
+### IC 166
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('IC 166')), *cluster_args)
+```
+
+
+### Kharchenko 1
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('Kharchenko 1')), *cluster_args)
+```
+
+
+### Melotte 20
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('Melotte 20')), *cluster_args)
+```
+
+
+### Melotte 22
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('Melotte 22')), *cluster_args)
+```
+
+
+### NGC 1245
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 1245')), *cluster_args)
+```
+
+
+### NGC 1798
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 1798')), *cluster_args)
+```
+
+
+### NGC 1817
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 1817')), *cluster_args)
+```
+
+
+### NGC 188
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 188')), *cluster_args)
+```
+
+
+### NGC 2158
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 2158')), *cluster_args)
+```
+
+
+### NGC 2204
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 2204')), *cluster_args)
+```
+
+
+### NGC 2243
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 2243')), *cluster_args)
+```
+
+
+### NGC 2420
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 2420')), *cluster_args)
+```
+
+
+### NGC 2632
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 2632')), *cluster_args)
+```
+
+
+### NGC 2682
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 2682')), *cluster_args)
+```
+
+
+### NGC 6705
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 6705')), *cluster_args)
+```
+
+
+### NGC 6791
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 6791')), *cluster_args)
+```
+
+
+### NGC 6819
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 6819')), *cluster_args)
+```
+
+
+### NGC 7789
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('NGC 7789')), *cluster_args)
+```
+
+
+### Ruprecht 147
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('Ruprecht 147')), *cluster_args)
+```
+
+
+### Trumpler 20
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('Trumpler 20')), *cluster_args)
+```
+
+
+### Trumpler 5
+```{python}
+fig = qa.plot_cluster_view(COADD_SPECTRUM_MODEL.obj.in_(get_cluster_members('Trumpler 5')), *cluster_args)
+```
+
+
+
+## Star clusters (SDSS-IV targeting flags)
+
+Cluster members in the following figures were selected from the SDSS-IV APOGEE targeting flags, which might candidate cluster members that the @occam survey discarded as non-members. Here we are only showing clusters with ten or more candidate members.
+
+### M92
+```{python}
+
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m92, *cluster_args)
+```
+### M15
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m15, *cluster_args)
+```
+### M53
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m53, *cluster_args)
+```
+### NGC 5466
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_5466, *cluster_args)
+```
+### M2
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m2, *cluster_args)
+```
+### M13
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m13, *cluster_args)
+```
+### M3
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m3, *cluster_args)
+```
+### M5
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m5, *cluster_args)
+```
+### M12
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m12, *cluster_args)
+```
+### M107
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m107, *cluster_args)
+```
+### M71
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m71, *cluster_args)
+```
+### NGC 2158
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_2158, *cluster_args)
+```
+### M35
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m35, *cluster_args)
+```
+### NGC 2420
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_2420, *cluster_args)
+```
+### NGC 188
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_188, *cluster_args)
+```
+### M67
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m67, *cluster_args)
+```
+### NGC 7789
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_7789, *cluster_args)
+```
+### Pleiades
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_pleiades, *cluster_args)
+```
+### NGC 6819
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_6819, *cluster_args)
+```
+### Coma Berenices
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_coma_berenices, *cluster_args)
+```
+### NGC 6791
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_6791, *cluster_args)
+```
+### NGC 5053
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_5053, *cluster_args)
+```
+### M68
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m68, *cluster_args)
+```
+### NGC 6397
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_6397, *cluster_args)
+```
+### M55
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m55, *cluster_args)
+```
+### M22
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m22, *cluster_args)
+```
+### M79
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m79, *cluster_args)
+```
+### NGC 3201
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_3201, *cluster_args)
+```
+### M10
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m10, *cluster_args)
+```
+### NGC 6752
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_6752, *cluster_args)
+```
+### Omega Centauri
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_omega_centauri, *cluster_args)
+```
+### M54
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m54, *cluster_args)
+```
+### NGC 288
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_288, *cluster_args)
+```
+### NGC 362
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_362, *cluster_args)
+```
+### NGC 1851
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_1851, *cluster_args)
+```
+### M4
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_m4, *cluster_args)
+```
+### NGC 2808
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_2808, *cluster_args)
+```
+### 47TUC
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_47tuc, *cluster_args)
+```
+### NGC 6388
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_ngc_6388, *cluster_args)
+```
+### Draco
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_draco, *cluster_args)
+```
+### Ursa Minor
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_urminor, *cluster_args)
+```
+### Bootes 1
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_bootes1, *cluster_args)
+```
+### Sextans
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_sexans, *cluster_args)
+```
+### Fornax
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_fornax, *cluster_args)
+```
+### Sculptor
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_sculptor, *cluster_args)
+```
+### Carina
+```{python}
+fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_carina, *cluster_args)
+```
+
+
+# Calibrations
+
+## Error model
+
+### Formal (raw) error
+
+These plots show the log density of raw formal error reported by the pipeline as a function of spectrum S/N ratio.
+
+```{python}
+fig = qa.plot_formal_error_wrt_snr(MODEL, (COADD_SPECTRUM_MODEL, ))
+```
+
+
+### Calibrated error
+```{python}
+fig = qa.plot_z_scores("ApogeeNetV2")
+```
+
+# Reference
+
+The following papers describe the pipeline in more detail:
+
+* @apogeenet_1
+
+* @apogeenet_2
+
+
+## Field descriptions
+```{python}
+qa.render_data_model(MODEL)
+```
+
+## Flag definitions
+
+The table below gives the pipeline flag definitions, their descriptions, and the number of times that flag is set `True` on a result in the database.
+
+```{python}
+qa.render_flag_definitions(MODEL)
+```
+
+
+
+```{python}
+from datetime import datetime
+from IPython.display import Markdown
+Markdown(f"This page was built on {datetime.now()}.")
+```

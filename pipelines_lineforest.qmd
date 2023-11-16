@@ -1,0 +1,376 @@
+---
+title: "LineForest"
+bibliography: bibliography.bib
+author:
+  - name: Marina Kounkel
+    email: marina.kounkel@vanderbilt.edu
+    affiliation:
+      - id: unf
+        name: University of North Florida
+      - id: vu
+        name: Vanderbilt University
+    roles: Principal investigator of APOGEENet.    
+    corresponding: true
+---
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+from astropy.table import Table
+from astra.utils import expand_path
+from astra.models import Source
+
+import astra_qa as qa
+from astra import __version__
+from astra.models import (
+    LineForest as MODEL,
+    BossVisitSpectrum as VISIT_SPECTRUM_MODEL,
+    BossCombinedSpectrum as COADD_SPECTRUM_MODEL
+)
+```
+
+# Summary
+
+::: {.callout-warning}
+## No description set
+
+A summary description is needed for this pipeline.
+:::
+
+
+The pipeline summary files include;
+
+```{python}
+qa.render_links_to_summary_files(MODEL)
+```
+
+Pipelines are usually executed on coadded spectra and on visit (epoch) spectra. 
+Even if a pipeline only runs on spectra from one instrument (e.g., APOGEE), there are still many derivative products of those spectra, and different ways they can be stored.
+
+For example, a pipeline might require the input spectra to be at the rest frame and resampled onto a common wavelength grid, so it is not expected to report results from spectra that are stored in the observed frame.
+Or there might be multiple variants of rest-frame spectra of the same observation, which vary in how they were resampled or combined. 
+
+The table below lists all spectrum models in `astra`, and the number of pipeline results for that spectrum model.
+
+```{python}
+qa.render_row_counts_by_spectrum_model(MODEL)
+```
+
+The following figure shows the number of visit spectra and the number of pipeline results as a function of time, which can be useful for identifying any chronological chunks of missing or problematic data.
+Here we are showing visit spectra from the spectrum model that is most frequently analysed by this pipeline.
+
+```{python}
+#| out-width: 100%
+#| fig-format: png
+fig = qa.plot_visits_by_mjd(VISIT_SPECTRUM_MODEL, MODEL)
+```
+
+# Scientific verification
+
+## Hertzsprung Russell figures
+
+
+### H-$\alpha$
+
+```{python}
+
+results = qa.prepare_data_for_gaia_hrd_plots(MODEL, limit=100000)
+
+def plot_gaia_hrds(line, bins=100):
+  fig = qa.plot_gaia_hrd_coloured_by_field(results, f"eqw_{line}", bins=bins)
+  fig = qa.plot_gaia_hrd_coloured_by_field(results, f"abs_{line}", bins=bins)
+  fig = qa.plot_gaia_hrd_coloured_by_field(results, f"detection_stat_{line}", bins=bins)
+  fig = qa.plot_gaia_hrd_coloured_by_field(results, f"detection_raw_{line}", bins=bins)
+
+plot_gaia_hrds("h_alpha")
+```
+
+### H-$\beta$
+```{python}
+plot_gaia_hrds("h_beta")
+```
+
+### H-$\gamma$
+```{python}
+plot_gaia_hrds("h_gamma")
+```
+
+### H-$\delta$
+```{python}
+plot_gaia_hrds("h_delta")
+```
+
+### H-$\epsilon$
+```{python}
+plot_gaia_hrds("h_epsilon")
+```
+
+### H-8
+```{python}
+plot_gaia_hrds("h_8")
+```
+
+### H-9
+```{python}
+plot_gaia_hrds("h_9")
+```
+
+### H-10
+```{python}
+plot_gaia_hrds("h_10")
+```
+
+### H-11
+```{python}
+plot_gaia_hrds("h_11")
+```
+
+### H-12
+```{python}
+plot_gaia_hrds("h_12")
+```
+
+### H-13
+```{python}
+plot_gaia_hrds("h_13")
+```
+
+### H-14
+```{python}
+plot_gaia_hrds("h_14")
+```
+
+### H-15
+```{python}
+plot_gaia_hrds("h_15")
+```
+
+### H-16
+```{python}
+plot_gaia_hrds("h_16")
+```
+
+### H-17
+```{python}
+plot_gaia_hrds("h_17")
+```
+
+### Pa-7
+```{python}
+plot_gaia_hrds("pa_7")
+```
+
+### Pa-8
+```{python}
+plot_gaia_hrds("pa_8")
+```
+
+### Pa-9
+```{python}
+plot_gaia_hrds("pa_9")
+```
+
+### Pa-10
+```{python}
+plot_gaia_hrds("pa_10")
+```
+
+### Pa-11
+```{python}
+plot_gaia_hrds("pa_11")
+```
+
+### Pa-12
+```{python}
+plot_gaia_hrds("pa_12")
+```
+
+### Pa-13
+```{python}
+plot_gaia_hrds("pa_13")
+```
+
+### Pa-14
+```{python}
+plot_gaia_hrds("pa_14")
+```
+
+### Pa-15
+```{python}
+plot_gaia_hrds("pa_15")
+```
+
+### Pa-16
+```{python}
+plot_gaia_hrds("pa_16")
+```
+
+### Pa-17
+```{python}
+plot_gaia_hrds("pa_17")
+```
+
+### Ca II at 8662 A
+```{python}
+plot_gaia_hrds("ca_ii_8662")
+```
+
+### Ca II at 8542 A
+```{python}
+plot_gaia_hrds("ca_ii_8542")
+```
+
+### Ca II at 8498 A
+```{python}
+plot_gaia_hrds("ca_ii_8498")
+```
+
+### Ca K at 3933 A
+```{python}
+plot_gaia_hrds("ca_k_3933")
+```
+
+
+### Ca H at 3968 A
+```{python}
+plot_gaia_hrds("ca_h_3968")
+```
+
+### He I at 6678 A
+```{python}
+plot_gaia_hrds("he_i_6678")
+```
+
+### He I at 5875 A
+```{python}
+plot_gaia_hrds("he_i_5875")
+```
+
+### He I at 5015 A
+```{python}
+plot_gaia_hrds("he_i_5015")
+```
+
+### He I at 4471 A
+```{python}
+plot_gaia_hrds("he_i_4471")
+```
+
+### He I at 4685 A
+```{python}
+plot_gaia_hrds("he_ii_4685")
+```
+
+### N II at 6583 A
+```{python}
+plot_gaia_hrds("n_ii_6583")
+```
+
+### N II at 6548 A
+```{python}
+plot_gaia_hrds("n_ii_6548")
+```
+
+### S II at 6716 A
+```{python}
+plot_gaia_hrds("s_ii_6716")
+```
+
+### S II at 6730 A
+```{python}
+plot_gaia_hrds("s_ii_6730")
+```
+
+### Fe II at 5018 A
+```{python}
+plot_gaia_hrds("fe_ii_5018")
+```
+
+### Fe II at 5169 A
+```{python}
+plot_gaia_hrds("fe_ii_5169")
+```
+
+### Fe II at 5197 A
+```{python}
+plot_gaia_hrds("fe_ii_5197")
+```
+
+### Fe II at 6432 A
+```{python}
+plot_gaia_hrds("fe_ii_6432")
+```
+
+### O I at 5577 A
+```{python}
+plot_gaia_hrds("o_i_5577")
+```
+
+
+### O I at 6300 A
+```{python}
+plot_gaia_hrds("o_i_6300")
+```
+
+### O I at 6363 A
+```{python}
+plot_gaia_hrds("o_i_6363")
+```
+
+### O II at 3727 A
+```{python}
+plot_gaia_hrds("o_ii_3727")
+```
+
+### O III at 4959 A
+```{python}
+plot_gaia_hrds("o_iii_4959")
+```
+
+### O III at 5006 A
+```{python}
+plot_gaia_hrds("o_iii_5006")
+```
+
+### O III at 4363 A
+```{python}
+plot_gaia_hrds("o_iii_4363")
+```
+
+### Li I at 6707 A
+```{python}
+plot_gaia_hrds("li_i")
+```
+
+
+# Reference
+
+The following papers describe the pipeline in more detail:
+
+::: {.callout-warning}
+## No references
+
+We need to gather references for this pipeline and put them here.
+:::
+
+
+## Field descriptions
+```{python}
+qa.render_data_model(MODEL)
+```
+
+## Flag definitions
+
+The table below gives the pipeline flag definitions, their descriptions, and the number of times that flag is set `True` on a result in the database.
+
+```{python}
+qa.render_flag_definitions(MODEL)
+```
+
+
+
+```{python}
+from datetime import datetime
+from IPython.display import Markdown
+Markdown(f"This page was built on {datetime.now()}.")
+```

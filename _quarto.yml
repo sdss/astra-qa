@@ -1,26 +1,28 @@
 project:
   type: website
 
-execute:
-  freeze: auto
-
 
 website:
   title: "Astra"
-  navbar:
-    left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
+  #navbar:
+  #  left:
+  #    - href: index.qmd
+  #      text: Home
+  #    - about.qmd
+  back-to-top-navigation: true
+  page-footer: |
+    Lost? Contact Andy Casey (andrew.casey@monash.edu)
+    <br><br><br><br><br>&nbsp;<br>
 
   sidebar:
     style: "docked"
     search: true
+    collapse-level: 2
     contents:
     - section: "<b>Metadata</b>"
       contents:
+        - targeting.qmd
         - metadata_reddening.qmd
-        - flags.qmd
     - section: "<b>Data</b>"
       contents:
         - data_apogee.qmd
@@ -29,12 +31,19 @@ website:
       contents:
         - pipelines_aspcap.qmd
         - pipelines_astronn.qmd
+        - section: "APOGEENet"
+          contents:
+            - pipelines_apogeenet_v3.qmd
+            - pipelines_apogeenet_v2.qmd
+        - pipelines_bossnet.qmd
         - pipelines_classifier.qmd
         - pipelines_corv.qmd
+        - pipelines_hotpayne.qmd
         - pipelines_lineforest.qmd
         - pipelines_mdwarftype.qmd
         - pipelines_slam.qmd 
-        - pipelines_snow_white.qmd       
+        - pipelines_snow_white.qmd
+        - pipelines_thepayne.qmd
         - pipelines_thecannon.qmd
         
 
@@ -45,6 +54,3 @@ format:
     theme: sandstone
     css: styles.css
     toc: true
-
-
-
