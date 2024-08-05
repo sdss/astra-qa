@@ -23,7 +23,7 @@ from astra.models import (
     ApogeeVisitSpectrum,
     ApogeeVisitSpectrumInApStar,
     ApogeeCoaddedSpectrumInApStar,
-    ApogeeMADGICSVisitSpectrum,
+    #ApogeeMADGICSVisitSpectrum,
     BossVisitSpectrum,
     BossCombinedSpectrum,
     BossRestFrameVisitSpectrum,
@@ -43,7 +43,7 @@ DEFAULT_SPECTRUM_MODELS = (
     ApogeeCombinedSpectrum,
     ApogeeVisitSpectrumInApStar,
     ApogeeCoaddedSpectrumInApStar, 
-    ApogeeMADGICSVisitSpectrum,
+    #ApogeeMADGICSVisitSpectrum,
     BossVisitSpectrum,
     BossCombinedSpectrum,
     BossRestFrameVisitSpectrum
@@ -174,6 +174,7 @@ def render_all_solar_results_pivot(model):
         .select()
         .join(Source)
         .where(Source.sdss4_apogee_id == "VESTA")
+        .where(model.v_astra == __version__)
         .dicts()
     )
 
@@ -254,6 +255,7 @@ This data model has no flag definitions!
                     model
                     .select()
                     .where(getattr(model, f"flag_{short_description}"))
+                    .where(model.v_astra == __version__)
                     .count()
                 )
                 table.append((bit, f"`{short_description.upper()}`", f"{count:,}", f"({100 * count/total:.1f}%)", full_description))
@@ -286,6 +288,7 @@ def render_row_counts_by_spectrum_model(model, spectrum_models=None):
             model
             .select()
             .join(spectrum_model, on=(spectrum_model.spectrum_pk == model.spectrum_pk))
+            .where(model.v_astra == __version__)
             .count()
         )
         rows.append((f"{spectrum_model.filetype.default}", f"`astra.models.{spectrum_model.__name__}`", f"{count:,}"))
@@ -324,6 +327,7 @@ def prepare_apokasc_comparison(model, spectrum_model):
         .where(
             Source.sdss4_apogee_id.in_(list(apokasc["2MASS_ID"]))
         &   model.logg.is_null(False)
+        &   (model.v_astra == __version__)
         )
         .dicts()
     )
@@ -601,7 +605,7 @@ def plot_binned_statistic(
 
 
 def plot_formal_error_wrt_snr(model, spectrum_models, unflagged=True, x_min=1, x_max=100, n_bins=200, y_max=None, default_y_max=0.5, label_names=("teff", "logg", "fe_h")):
-        
+    return "Not yet implemented"
     fields = []
     for ln in label_names:
         fields.extend([getattr(model, ln), getattr(model, f"e_{ln}")])
@@ -618,6 +622,7 @@ def plot_formal_error_wrt_snr(model, spectrum_models, unflagged=True, x_min=1, x
                 spectrum_model, 
                 on=(spectrum_model.spectrum_pk == model.spectrum_pk)
             )
+            .where(model.v_astra == __version__)
         )
         if unflagged:
             q = q.where(model.result_flags == 0)
@@ -682,38 +687,42 @@ def plot_visits_by_mjd(spectrum_visit_model, pipeline_model):
             fn.count(Case(None, ((second_where, 1), )))
         )
         .join(pipeline_model, JOIN.LEFT_OUTER, on=(pipeline_model.spectrum_pk == spectrum_visit_model.spectrum_pk))
+        .where(pipeline_model.v_astra == __version__)
         .group_by(spectrum_visit_model.mjd)
         .tuples()
     )
 
-    data = np.array(list(q))
-    data = data[np.argsort(data[:, 0])]
-    mjd, n_spectra, n_results, n_good_results = data.T
-
-    dates = Time(mjd, format="mjd")
-
     n_future = 30
     fig, (ax_count, ax_fail) = plt.subplots(2, 1)
     fig.set_size_inches(10, 5)
-    ax_count.plot(dates.datetime, n_spectra + 1, c="k", drawstyle="steps-mid", label=f"{spectrum_visit_model.__name__}")
-    ax_count.plot(dates.datetime, n_results + 1, c="tab:blue", drawstyle="steps-mid", label=f"{pipeline_model.__name__} results")
-    ax_count.plot(dates.datetime, n_good_results + 1, c="tab:red", drawstyle="steps-mid", label=f"{pipeline_model.__name__} results without flags")
 
-    ax_fail.plot(mjd, 100 * (1 - n_results / n_spectra), c="tab:blue", drawstyle="steps-mid")
+    data = np.array(list(q))
+    if len(data) > 0:
+        data = data[np.argsort(data[:, 0])]
+        mjd, n_spectra, n_results, n_good_results = data.T
 
-    ax_count.legend(loc="upper center", ncol=3, bbox_to_anchor=(0.5, 1.25), frameon=False)
+        dates = Time(mjd, format="mjd")
 
+        ax_count.plot(dates.datetime, n_spectra + 1, c="k", drawstyle="steps-mid", label=f"{spectrum_visit_model.__name__}")
+        ax_count.plot(dates.datetime, n_results + 1, c="tab:blue", drawstyle="steps-mid", label=f"{pipeline_model.__name__} results")
+        ax_count.plot(dates.datetime, n_good_results + 1, c="tab:red", drawstyle="steps-mid", label=f"{pipeline_model.__name__} results without flags")
+
+        ax_fail.plot(mjd, 100 * (1 - n_results / n_spectra), c="tab:blue", drawstyle="steps-mid")
+
+        ax_count.legend(loc="upper center", ncol=3, bbox_to_anchor=(0.5, 1.25), frameon=False)
+
+
+
+        ax_count.set_xlim(dates[0].datetime, Time(mjd[-1] + n_future, format="mjd").datetime)
+        show_years = np.unique(dates.byear.astype(int))[1:]
+        ax_count.set_xticks([datetime(y, 1, 1) for y in show_years])
+        ax_count.set_xticklabels(map(str, show_years))
+        ax_fail.set_xlim(mjd[0], mjd[-1] + n_future)
+        
     ax_count.semilogy()
     ax_fail.semilogy()
-
-    ax_count.set_xlim(dates[0].datetime, Time(mjd[-1] + n_future, format="mjd").datetime)
-    show_years = np.unique(dates.byear.astype(int))[1:]
-
-    ax_count.set_xticks([datetime(y, 1, 1) for y in show_years])
-    ax_count.set_xticklabels(map(str, show_years))
     ax_count.set_ylabel("Count + 1")
 
-    ax_fail.set_xlim(mjd[0], mjd[-1] + n_future)
     ax_fail.set_xlabel("MJD")
     ax_fail.set_ylabel(f"Failures [%]")
     fig.tight_layout()    
@@ -757,6 +766,8 @@ def plot_kiel_density(
 
 
 def plot_z_scores(model_name):
+    return "Not yet implemented"
+
     with open(expand_path(f"$MWM_ASTRA/{__version__}/aux/{model_name}.pkl"), "rb") as fp:
         content = pickle.load(fp)
 
@@ -898,6 +909,7 @@ def plot_cluster_view(
         .switch(model)
         .join(Source)
         .where(where) 
+        .where(model.v_astra == __version__)
         .dicts()
     ))
     if len(data) == 0:

@@ -116,8 +116,8 @@ def tabulate_counts_by_attribute(attribute_name, attributes, callable):
             (
                 f"`{item}`", 
                 f"{np.sum(mask):,}",
-                f"{np.sum(sources['n_boss_visits'][mask]):,}", 
-                f"{np.sum(sources['n_apogee_visits'][mask]):,}"
+                f"{np.sum([ea or 0 for ea in sources['n_boss_visits'][mask]]):,}", 
+                f"{np.sum([ea or 0 for ea in sources['n_apogee_visits'][mask]]):,}"
             )
         )
     return Markdown(tabulate(rows, headers=headers, colalign=("left", "right", "right", "right")))
@@ -152,7 +152,7 @@ tabulate_counts_by_attribute(
 ```{python}
 tabulate_counts_by_attribute(
     "Carton name", 
-    sorted(flags.all_names), 
+    sorted(flags.all_carton_names), 
     lambda name: flags.in_carton_name(name)
 )
 ```
@@ -161,7 +161,7 @@ tabulate_counts_by_attribute(
 ```{python}
 tabulate_counts_by_attribute(
     "Alternate carton name", 
-    sorted(flags.all_alt_names), 
+    sorted(flags.all_alt_carton_names), 
     lambda alt_name: flags.in_alt_name(alt_name)
 )
 ```
@@ -258,7 +258,7 @@ None
 
 ```{python}
 fig = plot_hertzsprung_russell_diagram_by_attribute(
-    sorted(flags.all_names),
+    sorted(flags.all_carton_names),
     lambda name: flags.in_carton_name(name)
 )
 None
@@ -268,7 +268,7 @@ None
 
 ```{python}
 fig = plot_hertzsprung_russell_diagram_by_attribute(
-    sorted(flags.all_alt_names),
+    sorted(flags.all_alt_carton_names),
     callable=lambda attr: flags.in_alt_name(attr),
 )
 None

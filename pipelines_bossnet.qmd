@@ -111,6 +111,7 @@ data = np.atleast_2d(
             MODEL.fe_h,
         )
         .where(MODEL.teff.is_null(False) & (MODEL.result_flags == 0))
+        .where(MODEL.v_astra == __version__)
         .tuples()
     )
 )

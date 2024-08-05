@@ -64,8 +64,9 @@ Here we are showing visit spectra from the spectrum model that is most frequentl
 ```{python}
 #| out-width: 100%
 #| fig-format: png
-fig = qa.plot_visits_by_mjd(VISIT_SPECTRUM_MODEL, MODEL)
+#fig = qa.plot_visits_by_mjd(VISIT_SPECTRUM_MODEL, MODEL)
 ```
+TODO: AstroNN visits by MJD
 
 
 # Scientific verification
@@ -98,6 +99,7 @@ data = np.atleast_2d(
             MODEL.fe_h,
         )
         .where(MODEL.teff.is_null(False) & (MODEL.result_flags == 0))
+        .where(MODEL.v_astra == __version__)
         .tuples()
     )
 )
@@ -133,7 +135,10 @@ Finally, @fig-apokasc-kiel shows Kiel diagrams using results from this pipeline.
 ```{python}
 #| label: fig-apokasc-kiel
 #| fig-cap: "Kiel diagrams showing results from this pipeline for all stars in the APOKASC sample. The different panels show density, log density, and coloured by metallicity."
-fig = qa.plot_hrd_of_apokasc_sample(results[pipeline_indices])
+try:
+    fig = qa.plot_hrd_of_apokasc_sample(results[pipeline_indices])
+except:
+    Markdown(f"Failed to create figure")
 ```
 
 ## Star clusters (OCCAM)

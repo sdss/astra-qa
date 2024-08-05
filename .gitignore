@@ -1,3 +1,8 @@
 .quarto/
 _freeze/
 _site/
+
+*.ipynb
+__pycache__/
+
+/.quarto/

@@ -78,6 +78,7 @@ data = np.atleast_2d(
             MODEL.logg,
         )
         .where(MODEL.teff.is_null(False))
+        .where(MODEL.v_astra == __version__)
         .tuples()
     )
 )

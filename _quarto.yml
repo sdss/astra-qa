@@ -36,7 +36,7 @@ website:
             - pipelines_apogeenet_v3.qmd
             - pipelines_apogeenet_v2.qmd
         - pipelines_bossnet.qmd
-        - pipelines_classifier.qmd
+        #- pipelines_classifier.qmd
         - pipelines_corv.qmd
         - pipelines_hotpayne.qmd
         - pipelines_lineforest.qmd
@@ -44,9 +44,8 @@ website:
         - pipelines_slam.qmd 
         - pipelines_snow_white.qmd
         - pipelines_thepayne.qmd
-        - pipelines_thecannon.qmd
-        
-
+        #- pipelines_thecannon.qmd
+      
 
 format:
   html:

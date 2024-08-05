@@ -57,6 +57,7 @@ data = np.atleast_2d(
             MODEL.raw_m_h_atm,
         )
         .where(~MODEL.flag_bad)
+        .where(MODEL.v_astra == __version__)
         .tuples()
     )
 )

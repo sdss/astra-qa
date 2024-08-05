@@ -1,6 +1,15 @@
 ---
 title: "Astra"
+format:
+  html:
+    code-fold: false
 ---
 
 
-These are the quality assurance pages for Astra.
+```{python}
+#| echo: false
+from astra import __version__
+from IPython.display import display, Markdown
+
+Markdown(f"These are the quality assurance pages for Astra {__version__}.")
+```
