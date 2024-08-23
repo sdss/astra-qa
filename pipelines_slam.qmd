@@ -58,6 +58,33 @@ Here we are showing visit spectra from the spectrum model that is most frequentl
 fig = qa.plot_visits_by_mjd(VISIT_SPECTRUM_MODEL, MODEL)
 ```
 
+## H-R diagram
+
+```{python}
+#| label: fig-hrd
+#| fig-cap: "Kiel diagram of all unflagged results reported by this pipeline (on coadds and visits)."
+
+data = np.atleast_2d(
+    list(
+        MODEL
+        .select(
+            MODEL.teff,
+            MODEL.logg,
+            MODEL.fe_h,
+            MODEL.alpha_fe
+        )
+        .where(~MODEL.flag_bad)
+        .where(MODEL.v_astra == __version__)
+        .tuples()
+    )
+)
+fig = qa.plot_kiel_three_panel(
+    *data.T,
+    "[Fe/H]", "[alpha/Fe]",
+    x_lims=(2500, 5000),
+    y_lims=(4, 5.5),
+)
+```
 
 # Calibrations
 

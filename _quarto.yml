@@ -44,7 +44,7 @@ website:
         - pipelines_slam.qmd 
         - pipelines_snow_white.qmd
         - pipelines_thepayne.qmd
-        #- pipelines_thecannon.qmd
+        - pipelines_thecannon.qmd
       
 
 format:

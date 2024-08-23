@@ -10,7 +10,7 @@ from scipy.stats import binned_statistic_2d
 from matplotlib.colors import LogNorm
 from IPython.display import display, Markdown
 from tabulate import tabulate
-from peewee import fn, JOIN, Case
+from peewee import fn, JOIN, Case, Expression
 from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
@@ -303,6 +303,36 @@ def render_row_counts_by_spectrum_model(model, spectrum_models=None):
             colalign=("left", "left", "right")
         )
     )
+
+def render_row_counts_by_spectrum_model_and_field(model, models, extra_field):
+        
+    total, rows = (0, [])
+    for spectrum_model in models:
+        q = (
+            model
+            .select(
+                getattr(spectrum_model, extra_field),
+                fn.COUNT(spectrum_model.spectrum_pk)
+            )
+            .join(spectrum_model, on=(spectrum_model.spectrum_pk == model.spectrum_pk))
+            .where(model.v_astra == __version__)
+            .group_by(getattr(spectrum_model, extra_field))
+            .dicts()
+        )
+        for row in q:
+            rows.append((f"{spectrum_model.filetype.default}", f"`astra.models.{spectrum_model.__name__}`", row[extra_field], f"{row['count']:,}"))
+            total += row['count']
+            
+    rows.append(("", "", "", f"**{total:,}**"))
+    
+    return Markdown(
+        tabulate(
+            rows,
+            headers=["File type", "Spectrum model", extra_field, "Number of result rows"],
+            colalign=("left", "left", "left", "right")
+        )
+    )
+
 
 
 def prepare_apokasc_comparison(model, spectrum_model):
@@ -605,7 +635,6 @@ def plot_binned_statistic(
 
 
 def plot_formal_error_wrt_snr(model, spectrum_models, unflagged=True, x_min=1, x_max=100, n_bins=200, y_max=None, default_y_max=0.5, label_names=("teff", "logg", "fe_h")):
-    return "Not yet implemented"
     fields = []
     for ln in label_names:
         fields.extend([getattr(model, ln), getattr(model, f"e_{ln}")])
@@ -729,6 +758,7 @@ def plot_visits_by_mjd(spectrum_visit_model, pipeline_model):
     return fig
 
 
+
 def plot_kiel_density(
     teff, logg, n_bins=200, x_lims=(3000, 6500), y_lims=(-0.5, 6),
     min_entries_per_bin=5, log=True,
@@ -766,7 +796,6 @@ def plot_kiel_density(
 
 
 def plot_z_scores(model_name):
-    return "Not yet implemented"
 
     with open(expand_path(f"$MWM_ASTRA/{__version__}/aux/{model_name}.pkl"), "rb") as fp:
         content = pickle.load(fp)
@@ -878,6 +907,53 @@ def plot_kiel_two_panel(teff, logg, fe_h, n_bins=200, x_lims=(3000, 6500), y_lim
     fig.tight_layout()
     return fig
 
+def plot_kiel_three_panel(teff, logg, y, z, label1, label2, n_bins=200, x_lims=(3000, 6500), y_lims=(-0.5, 6), log=True):
+    
+    fig, axes = plt.subplots(1, 3)
+    fig.set_size_inches(15, 5)
+
+    args = (teff, logg, y)
+    kwds = dict(
+        bins=(
+            np.linspace(*x_lims, n_bins),
+            np.linspace(*y_lims, n_bins)
+        ),    
+        interpolation="None",
+        colorbar=True,
+    )
+    plot_binned_statistic(
+        *args,
+        function="median",
+        cmap="viridis",
+        zlabel=label1,
+        ax=axes[1],
+        **kwds
+    )    
+    plot_binned_statistic(
+        teff, logg, z,
+        function="median",
+        cmap="viridis",
+        zlabel=label2,
+        ax=axes[2],
+        **kwds
+    )        
+    if log:
+        kwds["norm"] = LogNorm()
+    plot_binned_statistic(
+        *args,
+        function="count",
+        cmap="inferno",
+        zlabel="Count",
+        ax=axes[0],
+        **kwds
+    )
+    for ax in axes:
+        ax.set_xlim(ax.get_xlim()[::-1])
+        ax.set_xlabel("Teff [K]")
+        ax.set_ylabel("log(g)")
+    fig.tight_layout()
+    return fig
+
 
 import matplotlib.pyplot as plt
 from astropy.table import Table
@@ -980,3 +1056,160 @@ def plot_cluster_view(
     return fig
     
 
+def plot_abundances(
+    x_field,
+    y_field,
+    model,
+    spectrum_model,
+    x_transform=None,
+    y_transform=None,
+    z_fields=None,
+    x_lims=None,
+    y_lims=None,
+    where=None,
+    ):
+
+    try:
+            
+        fields = [
+            model.flag_bad,
+            x_field,
+            y_field,
+        ]
+
+        K = 1
+        if z_fields is not None:
+            fields.extend(z_fields)
+            K += len(z_fields)
+        
+        nan_not_none = lambda x: np.nan if x is None else x
+        q = (
+            model
+            .select(*fields)
+            .join(spectrum_model, on=(spectrum_model.spectrum_pk == model.spectrum_pk))
+            .where(model.v_astra == __version__)
+        )
+        if where is not None:
+            q = q.where(where)
+        
+        q = q.tuples()
+        
+        data = np.array([
+            list(map(nan_not_none, row))
+            for row in q
+        ])
+        flag_bad, x, y, *z = data.T
+        flag_bad = flag_bad.astype(bool)
+
+        fig, axes = plt.subplots(K, 2, figsize=(7.5, 3.5*K))
+        axes = np.atleast_2d(axes)
+        # do log counts first, with and without bad flags
+        n_bins = 100
+        bins = []
+        if x_lims is not None:
+            bins.append(np.linspace(*x_lims, n_bins))
+        else:
+            bins.append(np.linspace(np.nanmin(x), np.nanmax(x), n_bins))
+        if y_lims is not None:
+            bins.append(np.linspace(*y_lims, n_bins))
+        else:
+            bins.append(np.linspace(np.nanmin(y), np.nanmax(y), n_bins))
+        kwds = dict(function="count", colorbar=True, norm=LogNorm(), cmap="inferno", interpolation="none", zlabel="Count", min_entries_per_bin=1, bins=bins)
+
+        plot_binned_statistic(
+            x, y, y,
+            ax=axes[0,0],
+            **kwds
+        )
+        good = np.where(~flag_bad)[0]
+        plot_binned_statistic(
+            x[good], 
+            y[good], 
+            y[good],
+            ax=axes[0, 1],
+            **kwds
+        )
+        axes[0, 0].text(0.05, 0.9, f"N={len(x):,}", transform=axes[0, 0].transAxes, backgroundcolor="#ffffff")        
+        axes[0, 1].text(0.05, 0.9, f"N={len(good):,}", transform=axes[0, 1].transAxes,backgroundcolor="#ffffff")
+
+
+        def get_label(thing):
+            try:
+                if thing.name.endswith("_fe") or thing.name.endswith("_h"):
+                    return "[" + thing.name.replace("_", "/") + "]"
+                else:
+                    return thing.name
+            except AttributeError:
+                if isinstance(thing, Expression):
+                    numerator = thing.lhs.name.split("_")[0]
+                    denominator = thing.rhs.name.split("_")[0]
+                    return f"[{numerator}/{denominator}]"
+                else:
+                    raise a
+
+        if z_fields is not None:
+            for i, (z_field, ax_col) in enumerate(zip(z_fields, axes[1:])):
+                ax_all, ax_good = ax_col
+
+                plot_binned_statistic(
+                    x, y,
+                    z[i],
+                    function="mean",
+                    interpolation="none",
+                    zlabel=f"<{get_label(z_field)}>",
+                    min_entries_per_bin=1,
+                    bins=bins,
+                    ax=ax_all,
+                    colorbar=True
+                )
+
+                plot_binned_statistic(
+                    x[good], y[good],
+                    z[i][good],
+                    function="mean",
+                    interpolation="none",
+                    zlabel=f"<{get_label(z_field)}>",
+                    min_entries_per_bin=1,
+                    bins=bins,
+                    ax=ax_good,
+                    colorbar=True
+                )
+
+                for ax in (ax_good, ax_all):
+                    ax.set_ylim(ax.get_ylim()[::-1])
+                    ax.set_xlabel(get_label(x_field))
+                    ax.set_ylabel(get_label(y_field))
+                ax_good.set_title("~flag_bad")
+                ax_all.set_title("All")
+
+        for ax in axes[0]:
+            ax.set_ylim(ax.get_ylim()[::-1])
+            ax.set_xlabel(get_label(x_field))
+            ax.set_ylabel(get_label(y_field))
+        
+        axes[0, 0].set_title("All")
+        axes[0, 1].set_title("~flag_bad")
+        fig.tight_layout()
+    
+    except:
+        return "Exception raised when trying to make figure"
+    else:
+        return fig
+
+if __name__ == "__main__":
+
+    from astra.models import AstroNN, ApogeeCoaddedSpectrumInApStar
+
+    fig = plot_abundances(
+        AstroNN.fe_h, AstroNN.mg_h - AstroNN.fe_h, 
+        AstroNN, 
+        ApogeeCoaddedSpectrumInApStar,
+        x_lims=(-2.5, 0.5), 
+        y_lims=(-0.5, +0.5),
+        z_fields=(
+            AstroNN.teff,
+            AstroNN.logg,  
+            ApogeeCoaddedSpectrumInApStar.snr
+        )
+    )
+    fig.savefig("tmp.png", dpi=300)

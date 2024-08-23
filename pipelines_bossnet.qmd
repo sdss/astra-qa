@@ -72,7 +72,7 @@ Or there might be multiple variants of rest-frame spectra of the same observatio
 The table below lists all spectrum models in `astra`, and the number of pipeline results for that spectrum model.
 
 ```{python}
-qa.render_row_counts_by_spectrum_model(MODEL)
+qa.render_row_counts_by_spectrum_model_and_field(MODEL, (VISIT_SPECTRUM_MODEL, COADD_SPECTRUM_MODEL), "run2d")
 ```
 
 The following figure shows the number of visit spectra and the number of pipeline results as a function of time, which can be useful for identifying any chronological chunks of missing or problematic data.

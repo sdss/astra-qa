@@ -1197,6 +1197,1162 @@ fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_carina, *cluster_args
 
 
 
+# Chemical abundances
+  
+    
+## [C/H]
+
+```{python}
+element = MODEL.c_h
+element_lims = (-2.5, +0.5)
+```
+
+### With $T_{eff}$ 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [C_1/H]
+
+```{python}
+element = MODEL.c_1_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+
+## [C_12/C_13]
+
+```{python}
+element = MODEL.c_12_13
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [N/H]
+
+
+```{python}
+element = MODEL.n_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [O/H]
+
+```{python}
+element = MODEL.o_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+
+## [Na/H]
+
+```{python}
+element = MODEL.na_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Mg/H]
+
+
+```{python}
+element = MODEL.mg_h
+element_lims = (-1.5, +0.75)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Al/H]
+
+```{python}
+element = MODEL.al_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Si/H]
+
+```{python}
+element = MODEL.si_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [P/H]
+
+```{python}
+element = MODEL.p_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [S/H]
+
+```{python}
+element = MODEL.s_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [K/H]
+
+```{python}
+element = MODEL.k_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Ca/H]
+
+```{python}
+element = MODEL.ca_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Ti/H]
+
+```{python}
+element = MODEL.ti_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Ti_2/H]
+
+```{python}
+element = MODEL.ti_2_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [V/H]
+
+```{python}
+element = MODEL.v_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Cr/H]
+
+```{python}
+element = MODEL.cr_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Mn/H]
+
+```{python}
+element = MODEL.mn_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Co/H]
+
+```{python}
+element = MODEL.co_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Ni/H]
+
+```{python}
+element = MODEL.ni_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Cu/H]
+
+```{python}
+element = MODEL.cu_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Ce/H]
+
+```{python}
+element = MODEL.ce_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
+
+## [Nd/H]
+
+```{python}
+element = MODEL.nd_h
+element_lims = (-2.5, +0.5)
+```
+
+### With temperature 
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.teff, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(3000, 8000),
+  y_lims=element_lims,
+)
+```
+
+### With logg
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.logg, 
+  element, 
+  MODEL,
+  COADD_SPECTRUM_MODEL,
+  x_lims=(0, 5.5),
+  y_lims=element_lims,
+)
+```
+
+### With [Fe/H]
+
+```{python}
+fig = qa.plot_abundances(
+  MODEL.fe_h, element - MODEL.fe_h, 
+  MODEL, 
+  COADD_SPECTRUM_MODEL,
+  x_lims=element_lims, 
+  y_lims=(-0.5, +0.5),
+  z_fields=(
+      MODEL.teff,
+      MODEL.logg,  
+      COADD_SPECTRUM_MODEL.snr
+  )
+)
+```
 
 # Calibrations
 ## Error model
@@ -1204,7 +2360,7 @@ fig = qa.plot_cluster_view(Source.flag_sdss4_apogee_member_carina, *cluster_args
 ### Calibrated error
 
 ```{python}
-fig = qa.plot_z_scores("ASPCAP")
+#fig = qa.plot_z_scores("ASPCAP")
 ```
 
 

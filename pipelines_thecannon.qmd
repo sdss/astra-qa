@@ -25,8 +25,8 @@ import astra_qa as qa
 from astra import __version__
 from astra.models import (
     TheCannon as MODEL,
-    ApogeeVisitSpectrumInApStar as VISIT_SPECTRUM_MODEL,
-    ApogeeCoaddedSpectrumInApStar as COADD_SPECTRUM_MODEL
+    ApogeeVisitSpectrum as VISIT_SPECTRUM_MODEL,
+    ApogeeCombinedSpectrum as COADD_SPECTRUM_MODEL
 )
 ```
 
@@ -110,7 +110,10 @@ Throughout this section we are only considering the results from the co-added sp
 #| label: fig-apokasc-rgb-rc
 #| fig-cap: "Difference in log(g) between this pipeline and APOKASC for red giant branch stars and red clump stars, where evolutionary states are determined from APOKASC."
 
-fig = qa.plot_apokasc_rgb_rc_logg_comparison(apokasc[apokasc_indices], results[pipeline_indices])
+try:
+  fig = qa.plot_apokasc_rgb_rc_logg_comparison(apokasc[apokasc_indices], results[pipeline_indices])
+except:
+  None
 ```
 
 In @fig-apokasc-logg-distributions we show the distribution of log(g) for the entire APOKASC sample, and those from this pipeline. Results are only shown for stars that are matched to the APOKASC sample (i.e., so the distributions should have the same number of stars in them), but the bin limits are restricted to between 0.5 and 4.0, so any logg values outside of this will not be shown.
@@ -118,14 +121,20 @@ In @fig-apokasc-logg-distributions we show the distribution of log(g) for the en
 ```{python}
 #| label: fig-apokasc-logg-distributions
 #| fig-cap: "Distributions of log(g) for this pipeline and those in APOKASC, separated by evolutionary state (as determined by APOKASC)."
-fig = qa.plot_apokasc_logg_distributions(apokasc[apokasc_indices], results[pipeline_indices], MODEL)
+try:
+  fig = qa.plot_apokasc_logg_distributions(apokasc[apokasc_indices], results[pipeline_indices], MODEL)
+except:
+  None
 ```
 
 Finally, @fig-apokasc-kiel shows Kiel diagrams using results from this pipeline. Three views are shown: a histogram; a histogram coloured by the log counts; and a scatter plot coloured by the pipelinre-reported metallicity.
 ```{python}
 #| label: fig-apokasc-kiel
 #| fig-cap: "Kiel diagrams showing results from this pipeline for all stars in the APOKASC sample. The different panels show density, log density, and coloured by metallicity."
-fig = qa.plot_hrd_of_apokasc_sample(results[pipeline_indices])
+try:
+  fig = qa.plot_hrd_of_apokasc_sample(results[pipeline_indices])
+except:
+  None
 ```
 
 ## Star clusters (OCCAM)
